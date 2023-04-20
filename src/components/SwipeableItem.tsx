@@ -6,8 +6,8 @@ import {
   StyleSheet,
   View,
   LayoutChangeEvent,
+  useWindowDimensions,
 } from 'react-native';
-
 import {
   PanGestureHandler,
   TapGestureHandler,
@@ -31,6 +31,8 @@ type Props = {
   onClosed?: () => void;
   onItemPress?: () => void;
   onStartDrag?: () => void;
+  onLeftSwipeEnd?: () => void;
+  onRightSwipeEnd?: () => void;
 };
 
 export default function SwipeableItem({
@@ -42,12 +44,16 @@ export default function SwipeableItem({
   onOpened = () => null,
   onClosed = () => null,
   onItemPress = () => null,
+  onLeftSwipeEnd = () => null,
+  onRightSwipeEnd = () => null,
 }: Props) {
   const rightActionsWidth = useSharedValue(0);
   const leftActionsWidth = useSharedValue(0);
   const panRef = useRef(null);
 
   const { translateX, swipeableState, close } = useSwipeableContext();
+
+  const { width } = useWindowDimensions();
 
   const findSnapPoint = useCallback((x: number, direction: string) => {
     'worklet';
@@ -60,6 +66,7 @@ export default function SwipeableItem({
     if (leftActionsWidth.value > 0) {
       snapPoints.push(leftActionsWidth.value);
     }
+
     if (direction === 'right') {
       for (let i = snapPoints.length - 1; i >= 0; i -= 1) {
         if (x > snapPoints[i]) {
@@ -95,13 +102,13 @@ export default function SwipeableItem({
         }
         ctx.prevTranslationX = event.translationX;
         const toValue = ctx.startX + event.translationX;
-        const leftBound = -rightActionsWidth.value;
-        const rightBound = leftActionsWidth.value;
+        const leftBound = -rightActionsWidth.value * 2.5;
+        const rightBound = leftActionsWidth.value * 2.5;
         const value = rubberClamp(toValue, leftBound, rightBound);
         translateX.value = value;
       },
       onEnd: (event, ctx) => {
-        const finalX = ctx.startX + event.translationX;
+        const finalX = event.translationX;
         const snapPoint = findSnapPoint(finalX, ctx.gestureDirection);
         const newState = snapPoint === 0 ? 'closed' : 'opened';
         if (newState !== swipeableState.value) {
@@ -112,10 +119,28 @@ export default function SwipeableItem({
             runOnJS(onClosed)();
           }
         }
-        translateX.value = withSpring(
-          snapPoint || 0,
-          springConfig(event.velocityX)
-        );
+        const leftBound = -rightActionsWidth.value * 2.5;
+
+        if (-event.translationX > -leftBound && onLeftSwipeEnd) {
+          runOnJS(onLeftSwipeEnd)();
+          translateX.value = withSpring(-width, springConfig(event.velocityX));
+        } else {
+          translateX.value = withSpring(
+            snapPoint || 0,
+            springConfig(event.velocityX)
+          );
+        }
+
+        const rightBound = leftActionsWidth.value * 2.5;
+        if (event.translationX > rightBound && onRightSwipeEnd) {
+          runOnJS(onRightSwipeEnd)();
+          translateX.value = withSpring(width, springConfig(event.velocityX));
+        } else {
+          translateX.value = withSpring(
+            snapPoint || 0,
+            springConfig(event.velocityX)
+          );
+        }
       },
     },
     [findSnapPoint]

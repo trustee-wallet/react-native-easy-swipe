@@ -1,4 +1,4 @@
-# react-native-swipeable
+# react-native-easy-swipe
 
 Swipeable component for react native powered by Reanimated 2 and Gesture Handler
 
@@ -6,7 +6,7 @@ Swipeable component for react native powered by Reanimated 2 and Gesture Handler
 ## Installation
 
 ```sh
-yarn add @r0b0t3d/react-native-swipeable
+yarn add react-native-easy-swipe
 ```
 
 Also add dependencies, and follow instructions there to setup your project
@@ -20,7 +20,7 @@ import {
   SwipeableItem,
   withSwipeableContext,
   useSwipeableContext,
-} from 'react-native-swipeable';
+} from 'react-native-easy-swipe';
 
 // ...
 

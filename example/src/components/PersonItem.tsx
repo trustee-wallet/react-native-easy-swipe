@@ -51,6 +51,7 @@ function PersonItem({ item, activeItem }: Props) {
           </View>
         </SwipeableItem.Button>
         <SwipeableItem.Button onPress={handleEditPress}>
+          {/* eslint-disable-next-line react-native/no-inline-styles */}
           <View style={[styles.delete, { backgroundColor: 'green' }]}>
             <Text>Edit</Text>
           </View>
@@ -62,6 +63,7 @@ function PersonItem({ item, activeItem }: Props) {
   const renderLeftActions = useCallback(() => {
     return (
       <SwipeableItem.Button onPress={handlePinPress}>
+        {/* eslint-disable-next-line react-native/no-inline-styles */}
         <View style={[styles.delete, { backgroundColor: 'yellow' }]}>
           <Text>Pin</Text>
         </View>
