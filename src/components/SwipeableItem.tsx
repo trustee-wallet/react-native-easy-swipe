@@ -33,8 +33,9 @@ type Props = {
   onStartDrag?: () => void;
   onLeftSwipeEnd?: () => void;
   onRightSwipeEnd?: () => void;
+  disableLeftSwipe?: boolean;
+  disableRightSwipe?: boolean;
 };
-
 export default function SwipeableItem({
   containerStyle,
   children,
@@ -46,6 +47,8 @@ export default function SwipeableItem({
   onItemPress = () => null,
   onLeftSwipeEnd = () => null,
   onRightSwipeEnd = () => null,
+  disableLeftSwipe,
+  disableRightSwipe,
 }: Props) {
   const rightActionsWidth = useSharedValue(0);
   const leftActionsWidth = useSharedValue(0);
@@ -105,7 +108,13 @@ export default function SwipeableItem({
         const leftBound = -rightActionsWidth.value * 2.5;
         const rightBound = leftActionsWidth.value * 2.5;
         const value = rubberClamp(toValue, leftBound, rightBound);
-        translateX.value = value;
+        if (ctx.gestureDirection === 'right' && disableRightSwipe) {
+          translateX.value = withSpring(0)
+        } else if (ctx.gestureDirection === 'left' && disableLeftSwipe) {
+          translateX.value = withSpring(0)
+        } else {
+          translateX.value = value;
+        }
       },
       onEnd: (event, ctx) => {
         const finalX = event.translationX;
@@ -120,21 +129,31 @@ export default function SwipeableItem({
           }
         }
         const leftBound = -rightActionsWidth.value * 2.5;
-
-        if (-event.translationX > -leftBound && onLeftSwipeEnd) {
-          runOnJS(onLeftSwipeEnd)();
-          translateX.value = withSpring(-width, springConfig(event.velocityX));
-        } else {
-          translateX.value = withSpring(
-            snapPoint || 0,
-            springConfig(event.velocityX)
-          );
-        }
-
         const rightBound = leftActionsWidth.value * 2.5;
-        if (event.translationX > rightBound && onRightSwipeEnd) {
-          runOnJS(onRightSwipeEnd)();
-          translateX.value = withSpring(width, springConfig(event.velocityX));
+
+        if (rightBound !== 0) {
+          if (event.translationX > rightBound && onLeftSwipeEnd) {
+            runOnJS(onLeftSwipeEnd)();
+            translateX.value = withSpring(width, springConfig(event.velocityX));
+          } else {
+            translateX.value = withSpring(
+              snapPoint || 0,
+              springConfig(event.velocityX)
+            );
+          }
+        } else if (leftBound !== 0) {
+          if (-event.translationX > -leftBound && onRightSwipeEnd) {
+            runOnJS(onRightSwipeEnd)();
+            translateX.value = withSpring(
+              -width,
+              springConfig(event.velocityX)
+            );
+          } else {
+            translateX.value = withSpring(
+              snapPoint || 0,
+              springConfig(event.velocityX)
+            );
+          }
         } else {
           translateX.value = withSpring(
             snapPoint || 0,
